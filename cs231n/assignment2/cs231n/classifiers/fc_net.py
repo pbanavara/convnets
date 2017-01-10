@@ -36,6 +36,8 @@ class TwoLayerNet(object):
     """
     self.params = {}
     self.reg = reg
+    print "Hidden layer dimensions" + str(hidden_dim)
+
     
     ############################################################################
     # TODO: Initialize the weights and biases of the two-layer net. Weights    #
@@ -45,7 +47,14 @@ class TwoLayerNet(object):
     # weights and biases using the keys 'W1' and 'b1' and second layer weights #
     # and biases using the keys 'W2' and 'b2'.                                 #
     ############################################################################
-    pass
+    #Initializing weights
+    self.params["W1"] = np.random.normal(0, weight_scale, (hidden_dim,
+    input_dim))
+    self.params["b1"] = np.zeros(hidden_dim)
+    self.params["W2"] = np.random.normal(0, weight_scale, (num_classes, hidden_dim))
+    self.params["b2"] = np.zeros(num_classes)
+
+
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
@@ -75,7 +84,9 @@ class TwoLayerNet(object):
     # TODO: Implement the forward pass for the two-layer net, computing the    #
     # class scores for X and storing them in the scores variable.              #
     ############################################################################
-    pass
+    out = np.dot(X, self.params["W1"]) + self.params["b1"]
+    scores = np.dot(out, self.params["W2"]) + self.params["b2"]
+    print "Scores shape", scores.shape
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
@@ -95,7 +106,30 @@ class TwoLayerNet(object):
     # automated tests, make sure that your L2 regularization includes a factor #
     # of 0.5 to simplify the expression for the gradient.                      #
     ############################################################################
-    pass
+    try:
+        probs = np.exp(X - np.max(X, axis=1, keepdims=True))
+        probs /= np.sum(probs, axis=1, keepdims=True)
+        N = X.shape[0]
+        print probs.shape
+        print y.shape
+        print N
+        a = np.arange(N)
+        nps = probs[np.arange(N), y]
+        logval = np.log(nps)
+        loss = -np.sum(logval) / N
+        #dx = probs.copy()
+        #dx[np.arange(N), y] -= 1
+        #dx /= N
+    except:
+        print "no index at" , loss
+    grads["W2"] = np.dot(self.params["W2"], loss)
+    grads["b2"] = np.sum(self.params["b2"])
+    grads["out"] = np.dot(self.params["W2"], scores.T)
+    print self.params["W1"].shape 
+    grads["W1"] =  np.dot(grads["W2"].T, out.T)
+    print grads["W1"].shape
+    grads["b1"] = self.params["b1"]
+    grads["X"] = np.dot(self.params["W1"], grads["W2"])
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
@@ -148,6 +182,7 @@ class FullyConnectedNet(object):
     self.num_layers = 1 + len(hidden_dims)
     self.dtype = dtype
     self.params = {}
+        #self.params[weightkey] =  
 
     ############################################################################
     # TODO: Initialize the parameters of the network, storing all values in    #

@@ -34,8 +34,8 @@ def affine_forward(x, w, b):
   for i in x:
       y = np.reshape(i, totalDim)
       newList.append(y)
-  x = np.asarray(newList)
-  out = np.dot(x, w) + b
+  nl = np.asarray(newList)
+  out = np.dot(nl, w) + b
 
   #############################################################################
   # TODO: Implement the affine forward pass. Store the result in out. You     #
@@ -64,18 +64,28 @@ def affine_backward(dout, cache):
   - dw: Gradient with respect to w, of shape (D, M)
   - db: Gradient with respect to b, of shape (M,)
   """
-  dD = np.random.randn(*dout.shape)
   x = cache[0]
   (x, w, b) = cache
-  print np.asarray(x).shape
+  print "Shape of X"
+  print x.shape
+  print "Shape ov W"
+  print w.shape
+  print "Shape of b"
+  print b.shape
+  print "shape of wx + b"
+  print dout.shape
   dx, dw, db = None, None, None
   dw = np.dot(x.T, dout)
-  db = np.dot(b, dout.T)
+  dw = np.reshape(dw, w.shape)
+  print b.shape
+  print dout.shape
+  db = b
+  print db.shape
   dx = np.dot(dout, w.T)
+  dx = np.reshape(dx, x.shape)
   #############################################################################
   # TODO: Implement the affine backward pass.                                 #
   #############################################################################
-  pass
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -93,7 +103,7 @@ def relu_forward(x):
   - out: Output, of the same shape as x
   - cache: x
   """
-  out = None
+  out = np.maximum(x, 0)
   #############################################################################
   # TODO: Implement the ReLU forward pass.                                    #
   #############################################################################
@@ -124,7 +134,13 @@ def relu_backward(dout, cache):
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
-  return dx
+  for i in range(0, len(x)):
+    for k in range(len(x[i])):
+        if x[i][k] > 0:
+            x[i][k] = 1
+        else: 
+            x[i][k] = 0
+  return x
 
 
 def batchnorm_forward(x, gamma, beta, bn_param):
@@ -570,6 +586,9 @@ def softmax_loss(x, y):
   probs = np.exp(x - np.max(x, axis=1, keepdims=True))
   probs /= np.sum(probs, axis=1, keepdims=True)
   N = x.shape[0]
+  print probs.shape
+  print y.shape
+  print N
   loss = -np.sum(np.log(probs[np.arange(N), y])) / N
   dx = probs.copy()
   dx[np.arange(N), y] -= 1
