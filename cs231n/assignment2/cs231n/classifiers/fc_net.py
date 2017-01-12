@@ -84,9 +84,22 @@ class TwoLayerNet(object):
     # TODO: Implement the forward pass for the two-layer net, computing the    #
     # class scores for X and storing them in the scores variable.              #
     ############################################################################
-    out = np.dot(X, self.params["W1"]) + self.params["b1"]
+    print "Shape of X", X.shape
+    N = len(X)
+    totalDim = 0
+    for i in X[1]:
+        dim = 1
+        for k in i.shape:
+            dim *= k
+        totalDim += dim
+    print "Total dimension", totalDim
+    newList = []
+    for i in X:
+      yy = np.reshape(i, totalDim)
+      newList.append(yy)
+    nl = np.asarray(newList)
+    out = np.dot(nl, self.params["W1"]) + self.params["b1"]
     scores = np.dot(out, self.params["W2"]) + self.params["b2"]
-    print "Scores shape", scores.shape
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
@@ -107,33 +120,38 @@ class TwoLayerNet(object):
     # of 0.5 to simplify the expression for the gradient.                      #
     ############################################################################
     try:
-        probs = np.exp(X - np.max(X, axis=1, keepdims=True))
+        probs = np.exp(scores - np.max(X, axis=1, keepdims=True))
         probs /= np.sum(probs, axis=1, keepdims=True)
         N = X.shape[0]
-        print probs.shape
-        print y.shape
-        print N
         a = np.arange(N)
-        nps = probs[np.arange(N), y]
+        #print "Probs shape", probs.shape
+        #print "a shape", a.shape
+        #print "y shape", y.shape
+        nps = probs[a, y]
         logval = np.log(nps)
-        loss = -np.sum(logval) / N
+        dataloss = -np.sum(logval) / N
+        reg_loss = 0.5 * self.reg * np.sum(self.params["W1"] *
+        self.params["W1"]) + 0.5 * self.reg * np.sum(self.params["W2"] * self.params["W2"])
+        loss = dataloss + reg_loss
+        print "Loss is" , loss
         #dx = probs.copy()
         #dx[np.arange(N), y] -= 1
         #dx /= N
-    except:
-        print "no index at" , loss
-    grads["W2"] = np.dot(self.params["W2"], loss)
+    except ValueError as e:
+        print e
+        print "no index at" , loss.shape
+    grads["W2"] = np.dot(out.T, scores)
     grads["b2"] = np.sum(self.params["b2"])
-    grads["out"] = np.dot(self.params["W2"], scores.T)
-    print self.params["W1"].shape 
-    grads["W1"] =  np.dot(grads["W2"].T, out.T)
-    print grads["W1"].shape
+    #print "W1 Shape" , self.params["W1"].shape
+    #print "OUT Shape" , out.shape
+    #print "Grads W2 Shape" , grads["W2"].shape
+    grads["W1"] =  np.dot(X.T,out )
+    #print grads["W1"].shape
     grads["b1"] = self.params["b1"]
-    grads["X"] = np.dot(self.params["W1"], grads["W2"])
+    #grads["X"] = np.dot(self.params["X"], grads["W1"])
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
-
     return loss, grads
 
 
